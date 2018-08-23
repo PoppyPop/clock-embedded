@@ -3,6 +3,7 @@
 #include <TimeLib.h>
 #include "RTC/RTC.h"
 #include "Display/display.h"
+#include "Network/Network.h"
 
 int TimeZone = 1;
 
@@ -12,35 +13,14 @@ time_t UpdateClock()
 {
   return Clock.UpdateClock();
 }
-
 // /Clock
 
 // 1-Wire network
-#define SLAVE_ADDRESS 0x12
-int dataReceived = 0;
-
-void receiveData(int byteCount)
-{
-  while (Wire.available())
-  {
-    dataReceived = Wire.read();
-    Serial.print("Donnee recue : ");
-    Serial.println(dataReceived);
-  }
-}
-
-void sendData()
-{
-  int envoi = dataReceived + 1;
-  Wire.write(envoi);
-}
-
+Network network;
 // End 1-Wire network
 
 // Display
-
 Display display;
-
 // End Display
 
 void setup()
@@ -48,16 +28,14 @@ void setup()
   Serial.begin(9600); // start serial for output
 
   // Network
-  Wire.begin(SLAVE_ADDRESS);
-  Wire.onReceive(receiveData);
-  Wire.onRequest(sendData);
+  network.Setup();
 
   // Clock
   Clock.InitClock(TimeZone);
   setSyncProvider(UpdateClock);
 
   // Display
-  display.InitPin();
+  display.Setup();
   display.ChangeBrightness(DisplayBrightnessLevel::LOWER);
 
   Serial.println("Ready!");

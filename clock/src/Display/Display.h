@@ -16,6 +16,6 @@ class Display
 public:
   void DisplayNumber(int toDisplay, int second);
   void ChangeBrightness(DisplayBrightnessLevel brightness);
-  void InitPin();
+  void Setup();
   Display();
 };

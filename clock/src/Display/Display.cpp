@@ -229,7 +229,7 @@ void Display::DisplayNumber(int toDisplay, int second)
   //Wait for 20ms to pass before we paint the display again
 }
 
-void Display::InitPin()
+void Display::Setup()
 {
   pinMode(segA, OUTPUT);
   pinMode(segB, OUTPUT);

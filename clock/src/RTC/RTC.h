@@ -6,7 +6,6 @@ class RTC
 public:
   void UpdateTZ(int timezone);
   void InitClock(int timezone);
-  bool lostPower(void);
   time_t UpdateClock();
 
 private:
