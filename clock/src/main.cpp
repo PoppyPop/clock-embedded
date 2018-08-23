@@ -1,20 +1,32 @@
+#include <Arduino.h>
 #include <Wire.h>
+#include "RTClib.h"
+#include <TimeLib.h>
+
+RTC_DS3231 Clock;
+bool Century = true;
+bool h12;
+bool PM;
+byte ADay, AHour, AMinute, ASecond, ABits;
+bool ADy, A12h, Apm;
+
+int TimeZone = 1;
 
 #define SLAVE_ADDRESS 0x12
 int dataReceived = 0;
 
 #define digit0 A0
-#define digit1 A1 
-#define digit2 A2 
-#define digit3 A3 
+#define digit1 A1
+#define digit2 A2
+#define digit3 A3
 
-#define segA 7 
+#define segA 7
 #define segB 10
-#define segC 3 
-#define segD 4 
-#define segE 6 
-#define segF 9 
-#define segG 2 
+#define segC 3
+#define segD 4
+#define segE 6
+#define segF 9
+#define segG 2
 
 #define segP 8
 #define segS 5
@@ -136,37 +148,35 @@ void initDigits()
 #define SEGMENT_ON  LOW
 #define SEGMENT_OFF HIGH
 
-void setup() {
-  initDigits();
+// set digit, return if digit is reversed
+bool lightDigit(int digitToDisplay) {
 
-  pinMode(segA, OUTPUT);
-  pinMode(segB, OUTPUT);
-  pinMode(segC, OUTPUT);
-  pinMode(segD, OUTPUT);
-  pinMode(segE, OUTPUT);
-  pinMode(segF, OUTPUT);
-  pinMode(segG, OUTPUT);
+  digitalWrite(digit0, (arrayDigit[digitToDisplay] & AddDigit0) ? DIGIT_ON : DIGIT_OFF);
+  digitalWrite(digit1, (arrayDigit[digitToDisplay] & AddDigit1) ? DIGIT_ON : DIGIT_OFF);
+  digitalWrite(digit2, (arrayDigit[digitToDisplay] & AddDigit2) ? DIGIT_ON : DIGIT_OFF);
+  digitalWrite(digit3, (arrayDigit[digitToDisplay] & AddDigit3) ? DIGIT_ON : DIGIT_OFF);
 
-  pinMode(segP, OUTPUT);
-  pinMode(segS, OUTPUT);
-
-  pinMode(digit0, OUTPUT);
-  pinMode(digit1, OUTPUT);
-  pinMode(digit2, OUTPUT);
-  pinMode(digit3, OUTPUT);
-
-  Serial.begin(9600); // start serial for output
-  Wire.begin(SLAVE_ADDRESS);
-  Wire.onReceive(receiveData);
-  Wire.onRequest(sendData);
-  Serial.println("Ready!");
+  return  (arrayDigit[digitToDisplay] & AddRecerse);
 
 }
 
-void loop() {
+//Given a number, turns on those segments
+//If number == 10, then turn off number
+void lightNumber(int numberToDisplay, bool dot, bool seconds, bool reverse) {
 
-  //displayNumber(1234, 5678);
-  displayNumber(millis() / 1000, (millis() / 1000) + 1000);
+  unsigned int* digit = (reverse) ? arraySegmentReverse : arraySegment;
+
+  digitalWrite(segA, (digit[numberToDisplay] & AddA) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segB, (digit[numberToDisplay] & AddB) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segC, (digit[numberToDisplay] & AddC) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segD, (digit[numberToDisplay] & AddD) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segE, (digit[numberToDisplay] & AddE) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segF, (digit[numberToDisplay] & AddF) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segG, (digit[numberToDisplay] & AddG) ? SEGMENT_ON : SEGMENT_OFF);
+
+  digitalWrite(segP, (dot) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segS, (seconds) ? SEGMENT_ON : SEGMENT_OFF);
+
 }
 
 void displayNumber(int toDisplay, int second) {
@@ -211,36 +221,57 @@ void displayNumber(int toDisplay, int second) {
   //Wait for 20ms to pass before we paint the display again
 }
 
-// set digit, return if digit is reversed
-bool lightDigit(int digitToDisplay) {
+time_t UpdateClock() {
 
-  digitalWrite(digit0, (arrayDigit[digitToDisplay] & AddDigit0) ? DIGIT_ON : DIGIT_OFF);
-  digitalWrite(digit1, (arrayDigit[digitToDisplay] & AddDigit1) ? DIGIT_ON : DIGIT_OFF);
-  digitalWrite(digit2, (arrayDigit[digitToDisplay] & AddDigit2) ? DIGIT_ON : DIGIT_OFF);
-  digitalWrite(digit3, (arrayDigit[digitToDisplay] & AddDigit3) ? DIGIT_ON : DIGIT_OFF);
+DateTime base = Clock.now();
+// By default add timezone
+  DateTime future (base + TimeSpan(0, TimeZone, 0, 0));
+  
+  bool dst = false;
 
-  return  (arrayDigit[digitToDisplay] & AddRecerse);
+  int thisMonth = future.month();
+  int thisDay = future.day();
+  int thisWeekday = future.dayOfTheWeek();
+  int thisHour = future.hour();
+  
+  if(thisMonth == 10 && thisDay < (thisWeekday + 24))
+  {
+    dst=true;
+  }
+
+  if(thisMonth == 10 && thisDay > 24 && thisWeekday == 1 && thisHour < 2)
+  {
+    dst=true;
+  }
+
+  if(thisMonth < 10 && thisMonth > 3) dst = true;
+  
+  if(thisMonth == 3 && thisDay > 24 && thisDay >= (thisWeekday + 24))
+  {
+    if(!(thisWeekday == 1 && thisHour < 2)) dst = true;
+  }
+  
+  // if dst, add one hour
+  if(dst) future = (future + TimeSpan(0, 1, 0, 0)); 
+  
+Serial.println("Date update !");
+
+tmElements_t tmSet;
+tmSet.Day = future.day();
+tmSet.Hour = future.hour();
+tmSet.Minute = future.minute();
+tmSet.Month = future.month();
+tmSet.Second = future.second();
+tmSet.Wday = future.dayOfTheWeek();
+tmSet.Year = future.year();
+
+return makeTime(tmSet);
+
 
 }
 
-//Given a number, turns on those segments
-//If number == 10, then turn off number
-void lightNumber(int numberToDisplay, bool dot, bool seconds, bool reverse) {
 
-  unsigned int* digit = (reverse) ? arraySegmentReverse : arraySegment;
-
-  digitalWrite(segA, (digit[numberToDisplay] & AddA) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segB, (digit[numberToDisplay] & AddB) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segC, (digit[numberToDisplay] & AddC) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segD, (digit[numberToDisplay] & AddD) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segE, (digit[numberToDisplay] & AddE) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segF, (digit[numberToDisplay] & AddF) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segG, (digit[numberToDisplay] & AddG) ? SEGMENT_ON : SEGMENT_OFF);
-
-  digitalWrite(segP, (dot) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segS, (seconds) ? SEGMENT_ON : SEGMENT_OFF);
-
-}
+// 1-Wire network
 
 void receiveData(int byteCount) {
   while (Wire.available()) {
@@ -253,4 +284,68 @@ void receiveData(int byteCount) {
 void sendData() {
   int envoi = dataReceived + 1;
   Wire.write(envoi);
+}
+
+// End 1-Wire network
+
+void setup() {
+  initDigits();
+
+  pinMode(segA, OUTPUT);
+  pinMode(segB, OUTPUT);
+  pinMode(segC, OUTPUT);
+  pinMode(segD, OUTPUT);
+  pinMode(segE, OUTPUT);
+  pinMode(segF, OUTPUT);
+  pinMode(segG, OUTPUT);
+
+  pinMode(segP, OUTPUT);
+  pinMode(segS, OUTPUT);
+
+  pinMode(digit0, OUTPUT);
+  pinMode(digit1, OUTPUT);
+  pinMode(digit2, OUTPUT);
+  pinMode(digit3, OUTPUT);
+
+  Serial.begin(9600); // start serial for output
+  Wire.begin(SLAVE_ADDRESS);
+  Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
+  Serial.println("Ready!");
+
+
+  if (! Clock.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+
+  if (Clock.lostPower()) {
+    Serial.println("RTC lost power, lets set the time!");
+  }
+
+  setSyncProvider(UpdateClock);
+  
+}
+
+void digitalClockDisplay(){
+  // digital clock display of the time
+  Serial.print(hour());
+  Serial.print(" ");
+  Serial.print(minute());
+  Serial.print(" ");
+  Serial.print(second());
+  Serial.println();
+  Serial.print(day());
+  Serial.print(" ");
+  Serial.print(month());
+  Serial.print(" ");
+  Serial.print(year()); 
+  Serial.println(); 
+}
+
+void loop() {
+
+//digitalClockDisplay();
+  //displayNumber(1234, 5678);
+  displayNumber(hour()*100+minute(), (millis() / 1000) + 1000);
 }
