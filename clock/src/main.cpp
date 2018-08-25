@@ -36,12 +36,12 @@ void setup()
 
   // Display
   display.Setup();
-  display.ChangeBrightness(DisplayBrightnessLevel::LOWER);
+  display.ChangeBrightness(DisplayBrightnessLevel::Normal);
 
   Serial.println("Ready!");
 }
 
 void loop()
 {
-  display.DisplayNumber(hour() * 100 + minute(), (millis() / 1000) + 1000);
+  display.DisplayNumber(hour() * 100 + minute(), (millis() / 1000));
 }

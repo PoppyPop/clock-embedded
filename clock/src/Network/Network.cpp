@@ -7,12 +7,15 @@ int dataReceived = 0;
 
 void receiveData(int byteCount)
 {
+    // first byte = Command
+    // other = datas
     while (Wire.available())
     {
         dataReceived = Wire.read();
         Serial.print("Donnee recue : ");
         Serial.println(dataReceived);
     }
+    Serial.println("End!");
 }
 
 void sendData()

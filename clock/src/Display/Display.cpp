@@ -32,9 +32,64 @@
 #define AddP 2
 #define AddS 1
 
-unsigned int arraySegment[11];
-unsigned int arraySegmentReverse[11];
-float arraySegmentDelay[11];
+// unsigned int arraySegment[11];
+
+struct CharMap
+{
+  char Char;
+  unsigned int Value;
+};
+
+// . P
+//     A
+//    ___
+// F | G  | B
+//    ___
+// E |    | C
+//    ___
+//     D
+// * S
+
+#define CharCode 11
+CharMap arraySegment[CharCode] = {
+    {'0', 0b1111110}, // A B C D E F
+    {'1', 0b0110000}, // B c
+    {'2', 0b1101101}, // A B D E G
+    {'3', 0b1111001}, // A B C D G
+    {'4', 0b0110011}, // B C F G
+    {'5', 0b1011011}, // A C D F G
+    {'6', 0b1011111}, // A C D E F G
+    {'7', 0b1110000}, // A B C
+    {'8', 0b1111111}, // A B C D E F G
+    {'9', 0b1111011}, // A B C D F G
+    {' ', 0b0000000}  // None = Off
+};
+
+CharMap arraySegmentReverse[CharCode] = {
+    {'0', 0b1111110}, // A B C D E F
+    {'1', 0b0000110}, // E F
+    {'2', 0b1101101}, // A B D E G
+    {'3', 0b1001111}, // A D E F G
+    {'4', 0b0010111}, // C E F G
+    {'5', 0b1011011}, // A C D F G
+    {'6', 0b1111011}, // A B C D F G
+    {'7', 0b0001110}, // D E F
+    {'8', 0b1111111}, // A B C D E F G
+    {'9', 0b1011111}, // A C D E F G
+    {' ', 0b0000000}  // None = Off
+};
+
+CharMap *getElem(CharMap base[], char search)
+{
+  for (int x = 0; x < CharCode; x++)
+  {
+    if (search == base[x].Char)
+    {
+      return &base[x];
+    }
+  }
+  return NULL;
+}
 
 unsigned int brightness[8];
 DisplayBrightnessLevel BrightnessLevel;
@@ -52,55 +107,6 @@ unsigned int arrayDigit[9];
 
 void Init()
 {
-
-  // . P
-  //     A
-  //    ___
-  // F | G  | B
-  //    ___
-  // E |    | C
-  //    ___
-  //     D
-  // * S
-
-  arraySegment[0] = 0x7E;  // A B C D E F
-  arraySegment[1] = 0x30;  // B c
-  arraySegment[2] = 0x6D;  // A B D E G
-  arraySegment[3] = 0x79;  // A B C D G
-  arraySegment[4] = 0x33;  // B C F G
-  arraySegment[5] = 0x5B;  // A C D F G
-  arraySegment[6] = 0x5F;  // A C D E F G
-  arraySegment[7] = 0x70;  // A B C
-  arraySegment[8] = 0x7F;  // A B C D E F G
-  arraySegment[9] = 0x7B;  // A B C D F G
-  arraySegment[10] = 0x00; // None = Off
-
-  arraySegmentReverse[0] = 0x7E;  // A B C D E F
-  arraySegmentReverse[1] = 0x06;  // E F
-  arraySegmentReverse[2] = 0x6D;  // A B D E G
-  arraySegmentReverse[3] = 0x4F;  // A D E F G
-  arraySegmentReverse[4] = 0x17;  // C E F G
-  arraySegmentReverse[5] = 0x5B;  // A C D F G
-  arraySegmentReverse[6] = 0x7B;  // A B C D F G
-  arraySegmentReverse[7] = 0x0E;  // D E F
-  arraySegmentReverse[8] = 0x7F;  // A B C D E F G
-  arraySegmentReverse[9] = 0x5F;  // A C D E F G
-  arraySegmentReverse[10] = 0x00; // None = Off
-
-  float baseDelay = 0.1;
-  int baseFactor = 7;
-  arraySegmentDelay[0] = (baseFactor - 6) * baseDelay; // A B C D E F
-  arraySegmentDelay[1] = (baseFactor - 2) * baseDelay; // E F
-  arraySegmentDelay[2] = (baseFactor - 5) * baseDelay; // A B D E G
-  arraySegmentDelay[3] = (baseFactor - 5) * baseDelay; // A D E F G
-  arraySegmentDelay[4] = (baseFactor - 4) * baseDelay; // C E F G
-  arraySegmentDelay[5] = (baseFactor - 5) * baseDelay; // A C D F G
-  arraySegmentDelay[6] = (baseFactor - 6) * baseDelay; // A B C D F G
-  arraySegmentDelay[7] = (baseFactor - 3) * baseDelay; // D E F
-  arraySegmentDelay[8] = (baseFactor - 7) * baseDelay; // A B C D E F G
-  arraySegmentDelay[9] = (baseFactor - 6) * baseDelay; // A C D E F G
-  arraySegmentDelay[10] = 0 * baseDelay;               // None = OffOff
-
   arrayDigit[0] = 0x8;  // 1000 INH
   arrayDigit[1] = 0x5;  //
   arrayDigit[2] = 0x7;  //
@@ -138,12 +144,14 @@ void Init()
   BrightnessLevel = DisplayBrightnessLevel::Normal;
 }
 
-unsigned int DisplayBrightness(int number) {
-  return brightness[BrightnessLevel]*(1-arraySegmentDelay[number]);
+unsigned int DisplayBrightness(int number)
+{
+  return brightness[BrightnessLevel] /* (1 - arraySegmentDelay[number])*/;
 }
 
-unsigned int DisplayBrightnessSecond(int number) {
-  return DisplayBrightness(number)*0.5;
+unsigned int DisplayBrightnessSecond(int number)
+{
+  return DisplayBrightness(number) * 0.5;
 }
 
 #define DIGIT_ON HIGH
@@ -166,67 +174,62 @@ bool LightDigit(int digitToDisplay)
 
 //Given a number, turns on those segments
 //If number == 10, then turn off number
-void LightNumber(int numberToDisplay, bool dot, bool seconds, bool reverse)
+void LightNumber(char numberToDisplay, bool dot, bool seconds, bool reverse)
 {
+  CharMap *digit = (reverse) ? arraySegmentReverse : arraySegment;
 
-  unsigned int *digit = (reverse) ? arraySegmentReverse : arraySegment;
-
-  digitalWrite(segA, (digit[numberToDisplay] & AddA) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segB, (digit[numberToDisplay] & AddB) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segC, (digit[numberToDisplay] & AddC) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segD, (digit[numberToDisplay] & AddD) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segE, (digit[numberToDisplay] & AddE) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segF, (digit[numberToDisplay] & AddF) ? SEGMENT_ON : SEGMENT_OFF);
-  digitalWrite(segG, (digit[numberToDisplay] & AddG) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segA, (getElem(digit, numberToDisplay)->Value & AddA) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segB, (getElem(digit, numberToDisplay)->Value & AddB) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segC, (getElem(digit, numberToDisplay)->Value & AddC) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segD, (getElem(digit, numberToDisplay)->Value & AddD) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segE, (getElem(digit, numberToDisplay)->Value & AddE) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segF, (getElem(digit, numberToDisplay)->Value & AddF) ? SEGMENT_ON : SEGMENT_OFF);
+  digitalWrite(segG, (getElem(digit, numberToDisplay)->Value & AddG) ? SEGMENT_ON : SEGMENT_OFF);
 
   digitalWrite(segP, (dot) ? SEGMENT_ON : SEGMENT_OFF);
   digitalWrite(segS, (seconds) ? SEGMENT_ON : SEGMENT_OFF);
 }
 
-void Display::DisplayNumber(int toDisplay, int second)
+void DisplayNumberInternal(char toDisplay[], bool primary)
 {
+  int startIndex = (primary) ? 1 : 5;
 
   long beginTime = millis();
+  int charIndex = 0;
 
-  for (int digit = 4; digit > 0; digit--)
+  for (int digit = startIndex; digit < startIndex + 4; digit++)
   {
+    char value = toDisplay[charIndex];
 
     //Turn on the right segments for this digit
-    LightNumber(toDisplay % 10, false, false, LightDigit(digit));
+    LightNumber(value, false, false, LightDigit(digit));
 
-    delayMicroseconds(DisplayBrightness(toDisplay % 10));
+    delayMicroseconds(DisplayBrightness(value));
     //Display digit for fraction of a second (1us to 5000us, 500 is pretty good)
 
-    toDisplay /= 10;
-
     //Turn off all segments
-    LightNumber(10, false, false, false);
+    LightNumber(' ', false, false, false);
 
     //Turn off all digits
     LightDigit(0);
-  }
 
-  for (int digit = 8; digit > 4; digit--)
-  {
-
-    //Turn on the right segments for this digit
-    LightNumber(second % 10, false, false, LightDigit(digit));
-
-    delayMicroseconds(DisplayBrightnessSecond(second % 10));
-    //Display digit for fraction of a second (1us to 5000us, 500 is pretty good)
-
-    second /= 10;
-
-    //Turn off all segments
-    LightNumber(10, false, false, false);
-
-    //Turn off all digits
-    LightDigit(0);
+    charIndex++;
   }
 
   while ((millis() - beginTime) < 10)
     ;
   //Wait for 20ms to pass before we paint the display again
+}
+
+void Display::DisplayNumber(int toDisplay, int second)
+{
+  char value[4];
+  sprintf( value, "% 4d", toDisplay );
+  DisplayNumberInternal(value, true);
+
+  char secondary[4];
+  sprintf( secondary, "% 4d", second );
+  DisplayNumberInternal(secondary, false);
 }
 
 void Display::Setup()
@@ -255,4 +258,5 @@ Display::Display(void)
 
 void Display::ChangeBrightness(DisplayBrightnessLevel brightness)
 {
+  BrightnessLevel = brightness;
 }
