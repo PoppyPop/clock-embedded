@@ -43,5 +43,5 @@ void setup()
 
 void loop()
 {
-  display.DisplayNumber(hour() * 100 + minute(), (millis() / 1000));
+  display.DisplayNumber(hour() * 100 + minute(), (millis() / 1000)/*+9980*/);
 }

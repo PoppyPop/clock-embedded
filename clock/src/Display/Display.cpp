@@ -50,7 +50,7 @@ struct CharMap
 //     D
 // * S
 
-#define CharCode 11
+#define CharCode 12
 CharMap arraySegment[CharCode] = {
     {'0', 0b1111110}, // A B C D E F
     {'1', 0b0110000}, // B c
@@ -62,7 +62,8 @@ CharMap arraySegment[CharCode] = {
     {'7', 0b1110000}, // A B C
     {'8', 0b1111111}, // A B C D E F G
     {'9', 0b1111011}, // A B C D F G
-    {' ', 0b0000000}  // None = Off
+    {' ', 0b0000000}, // None = Off
+    {'_', 0b0000000}  // None = Off
 };
 
 CharMap arraySegmentReverse[CharCode] = {
@@ -76,7 +77,8 @@ CharMap arraySegmentReverse[CharCode] = {
     {'7', 0b0001110}, // D E F
     {'8', 0b1111111}, // A B C D E F G
     {'9', 0b1011111}, // A C D E F G
-    {' ', 0b0000000}  // None = Off
+    {' ', 0b0000000}, // None = Off
+    {'_', 0b0000000}  // None = Off
 };
 
 CharMap *getElem(CharMap base[], char search)
@@ -190,7 +192,7 @@ void LightNumber(char numberToDisplay, bool dot, bool seconds, bool reverse)
   digitalWrite(segS, (seconds) ? SEGMENT_ON : SEGMENT_OFF);
 }
 
-void DisplayNumberInternal(char toDisplay[], bool primary)
+void DisplayNumberInternal(String toDisplay, bool primary)
 {
   int startIndex = (primary) ? 1 : 5;
 
@@ -199,7 +201,7 @@ void DisplayNumberInternal(char toDisplay[], bool primary)
 
   for (int digit = startIndex; digit < startIndex + 4; digit++)
   {
-    char value = toDisplay[charIndex];
+    char value = toDisplay.charAt(charIndex);
 
     //Turn on the right segments for this digit
     LightNumber(value, false, false, LightDigit(digit));
@@ -221,15 +223,27 @@ void DisplayNumberInternal(char toDisplay[], bool primary)
   //Wait for 20ms to pass before we paint the display again
 }
 
-void Display::DisplayNumber(int toDisplay, int second)
+String padLeft(unsigned int dec, char pad, unsigned int size)
 {
-  char value[4];
-  sprintf( value, "% 4d", toDisplay );
-  DisplayNumberInternal(value, true);
+  String result = "";
+  String base = String(dec);
 
-  char secondary[4];
-  sprintf( secondary, "% 4d", second );
-  DisplayNumberInternal(secondary, false);
+  base = base.substring(max((int)base.length() - (int)size, 0));
+
+  for (unsigned int i = 0; i < size - base.length(); i++)
+  {
+    result.concat(pad);
+  }
+  result.concat(base);
+
+  return result;
+}
+
+void Display::DisplayNumber(unsigned int toDisplay, unsigned int second)
+{
+  DisplayNumberInternal(padLeft(toDisplay, '0', 4), true);
+
+  DisplayNumberInternal(padLeft(second, ' ', 4), false);
 }
 
 void Display::Setup()

@@ -14,7 +14,7 @@ enum DisplayBrightnessLevel : int
 class Display
 {
 public:
-  void DisplayNumber(int toDisplay, int second);
+  void DisplayNumber(unsigned int toDisplay, unsigned int second);
   void ChangeBrightness(DisplayBrightnessLevel brightness);
   void Setup();
   Display();
