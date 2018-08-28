@@ -21,6 +21,10 @@ Network network;
 
 // Display
 Display display;
+void SetBrightness(bool value)
+{
+  display.ChangeBrightness(display.BrightnessLevel + ((value) ? 1 : -1));
+}
 // End Display
 
 void setup()
@@ -29,6 +33,7 @@ void setup()
 
   // Network
   network.Setup();
+  network.SetBrightnessCallback(SetBrightness);
 
   // Clock
   Clock.InitClock(TimeZone);
@@ -36,12 +41,12 @@ void setup()
 
   // Display
   display.Setup();
-  display.ChangeBrightness(DisplayBrightnessLevel::Normal);
+  display.ChangeBrightness(4);
 
   Serial.println("Ready!");
 }
 
 void loop()
 {
-  display.DisplayNumber(hour() * 100 + minute(), (millis() / 1000)/*+9980*/);
+  display.DisplayNumber(hour() * 100 + minute(), (millis() / 1000) /*+9980*/);
 }

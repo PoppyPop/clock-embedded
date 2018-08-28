@@ -1,6 +1,5 @@
 
 #include "Display/Display.h"
-#include <Arduino.h>
 
 #define digit0 A0
 #define digit1 A1
@@ -93,8 +92,8 @@ CharMap *getElem(CharMap base[], char search)
   return NULL;
 }
 
-unsigned int brightness[8];
-DisplayBrightnessLevel BrightnessLevel;
+#define MaxBright 8
+unsigned int brightness[MaxBright];
 
 // Define digit to light for display
 // Order R ICBA
@@ -107,7 +106,7 @@ DisplayBrightnessLevel BrightnessLevel;
 
 unsigned int arrayDigit[9];
 
-void Init()
+void Display::Init()
 {
   arrayDigit[0] = 0x8;  // 1000 INH
   arrayDigit[1] = 0x5;  //
@@ -143,15 +142,15 @@ void Init()
   brightness[6] = 2000;
   brightness[7] = 5000;
 
-  BrightnessLevel = DisplayBrightnessLevel::Normal;
+  BrightnessLevel = 4;
 }
 
-unsigned int DisplayBrightness(int number)
+unsigned int Display::DisplayBrightness(int number)
 {
   return brightness[BrightnessLevel] /* (1 - arraySegmentDelay[number])*/;
 }
 
-unsigned int DisplayBrightnessSecond(int number)
+unsigned int Display::DisplayBrightnessSecond(int number)
 {
   return DisplayBrightness(number) * 0.5;
 }
@@ -163,7 +162,7 @@ unsigned int DisplayBrightnessSecond(int number)
 #define SEGMENT_OFF HIGH
 
 // set digit, return if digit is reversed
-bool LightDigit(int digitToDisplay)
+static bool LightDigit(int digitToDisplay)
 {
 
   digitalWrite(digit0, (arrayDigit[digitToDisplay] & AddDigit0) ? DIGIT_ON : DIGIT_OFF);
@@ -176,7 +175,7 @@ bool LightDigit(int digitToDisplay)
 
 //Given a number, turns on those segments
 //If number == 10, then turn off number
-void LightNumber(char numberToDisplay, bool dot, bool seconds, bool reverse)
+static void LightNumber(char numberToDisplay, bool dot, bool seconds, bool reverse)
 {
   CharMap *digit = (reverse) ? arraySegmentReverse : arraySegment;
 
@@ -192,7 +191,7 @@ void LightNumber(char numberToDisplay, bool dot, bool seconds, bool reverse)
   digitalWrite(segS, (seconds) ? SEGMENT_ON : SEGMENT_OFF);
 }
 
-void DisplayNumberInternal(String toDisplay, bool primary)
+void Display::DisplayNumberInternal(String toDisplay, bool primary)
 {
   int startIndex = (primary) ? 1 : 5;
 
@@ -223,7 +222,7 @@ void DisplayNumberInternal(String toDisplay, bool primary)
   //Wait for 20ms to pass before we paint the display again
 }
 
-String padLeft(unsigned int dec, char pad, unsigned int size)
+static String padLeft(unsigned int dec, char pad, unsigned int size)
 {
   String result = "";
   String base = String(dec);
@@ -270,7 +269,10 @@ Display::Display(void)
   Init();
 }
 
-void Display::ChangeBrightness(DisplayBrightnessLevel brightness)
+void Display::ChangeBrightness(int brightness)
 {
-  BrightnessLevel = brightness;
+  if (brightness >= 0 && brightness < MaxBright)
+  {
+    BrightnessLevel = brightness;
+  }
 }
