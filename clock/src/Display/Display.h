@@ -14,7 +14,8 @@
 class Display
 {
 public:
-  void DisplayNumber(unsigned int toDisplay, unsigned int second);
+  void DisplayNumber(unsigned int toDisplay, char padChar, bool primary);
+  void DisplayText(String toDisplay, bool primary);
   void ChangeBrightness(int brightness);
   void Setup();
   Display();

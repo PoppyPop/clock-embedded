@@ -222,10 +222,9 @@ void Display::DisplayNumberInternal(String toDisplay, bool primary)
   //Wait for 20ms to pass before we paint the display again
 }
 
-static String padLeft(unsigned int dec, char pad, unsigned int size)
+static String padLeft(String base, char pad, unsigned int size)
 {
   String result = "";
-  String base = String(dec);
 
   base = base.substring(max((int)base.length() - (int)size, 0));
 
@@ -238,11 +237,22 @@ static String padLeft(unsigned int dec, char pad, unsigned int size)
   return result;
 }
 
-void Display::DisplayNumber(unsigned int toDisplay, unsigned int second)
+static String padLeft(unsigned int dec, char pad, unsigned int size)
 {
-  DisplayNumberInternal(padLeft(toDisplay, '0', 4), true);
+  String base = String(dec);
 
-  DisplayNumberInternal(padLeft(second, ' ', 4), false);
+  return padLeft(base, pad, size);
+}
+
+
+void Display::DisplayText(String toDisplay, bool primary)
+{
+  DisplayNumberInternal(padLeft(toDisplay, ' ', 4), primary);
+}
+
+void Display::DisplayNumber(unsigned int toDisplay, char padChar, bool primary)
+{
+  DisplayNumberInternal(padLeft(toDisplay, padChar, 4), primary);
 }
 
 void Display::Setup()

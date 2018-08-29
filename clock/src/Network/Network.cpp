@@ -1,6 +1,5 @@
 #include "Network/Network.h"
 #include <Wire.h>
-#include <Arduino.h>
 
 #define SLAVE_ADDRESS 0x12
 
@@ -11,6 +10,12 @@ void Network::SetBrightnessCallback(void (*pFunc)(bool action))
     pBrightFunc = pFunc;
 }
 
+void (*pTextFunc)(String text);
+void Network::SetTextCallback(void (*pFunc)(String text))
+{
+    pTextFunc = pFunc;
+}
+
 void handleCommand(char command, String datas)
 {
     Serial.println("Command: " + String(command) + " -> " + datas);
@@ -19,6 +24,9 @@ void handleCommand(char command, String datas)
     {
     case 'B':
         pBrightFunc((datas == "+"));
+        break;
+    case 'T':
+        pTextFunc(datas);
         break;
     default:
         Serial.println("Command unknown: " + String(command) and +" -> " + datas);
