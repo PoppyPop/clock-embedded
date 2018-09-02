@@ -90,7 +90,7 @@ void Display2::DisplayInternal(String toDisplay, bool primary)
     {
         char value = toDisplay.charAt(charIndex);
 
-        lc->setChar(0, digit, value, false);
+        lc->setChar(0, digit, value, false, pgm_read_byte_near(reversed + digit));
 
         charIndex++;
     }
