@@ -16,6 +16,12 @@ void Network::SetTextCallback(void (*pFunc)(String text))
     pTextFunc = pFunc;
 }
 
+void (*pPersisFunc)();
+void Network::SwitchPersistantSecondary(void (*pFunc)())
+{
+    pPersisFunc = pFunc;
+}
+
 void handleCommand(char command, String datas)
 {
     Serial.println("Command: " + String(command) + " -> " + datas);
@@ -28,6 +34,8 @@ void handleCommand(char command, String datas)
     case 'T':
         pTextFunc(datas);
         break;
+    case 'P':
+        pPersisFunc();
     default:
         Serial.println("Command unknown: " + String(command) and +" -> " + datas);
     }

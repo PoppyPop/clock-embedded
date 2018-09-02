@@ -1,0 +1,3 @@
+[submodule "clock/lib/LedControl"]
+	path = clock/lib/LedControl
+	url = https://github.com/PoppyPop/LedControl.git
