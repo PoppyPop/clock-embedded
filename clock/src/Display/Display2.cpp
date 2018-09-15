@@ -46,7 +46,6 @@ void Display2::DisplayText(String toDisplay, bool primary, int dotPos)
 
 void Display2::Setup(int dataPin, int clkPin, int csPin)
 {
-
     lc = new LedControl(dataPin, clkPin, csPin, 1);
 
     /* Set common anode */
@@ -54,7 +53,7 @@ void Display2::Setup(int dataPin, int clkPin, int csPin)
     /* Go to normal mode */
     lc->shutdown(0, false);
     /* Set the brightness to a medium values */
-    lc->setIntensity(0, 2);
+    lc->setIntensity(0, BrightnessLevel);
     /* and clear the display */
     lc->clearDisplay(0);
 }
@@ -66,7 +65,7 @@ Display2::Display2(bool debug)
 
 void Display2::ChangeBrightness(int brightness)
 {
-    if (brightness >= 0 && brightness < MaxBright)
+    if (brightness >= 0 && brightness <= MaxBright)
     {
         lc->setIntensity(0, brightness);
         BrightnessLevel = brightness;

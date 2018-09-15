@@ -19,6 +19,11 @@ time_t UpdateClock()
 {
   return Clock.UpdateClock();
 }
+
+void reReadRtc()
+{
+  UpdateClock();
+}
 // /Clock
 
 // 1-Wire network
@@ -33,7 +38,7 @@ void DefaultSecondary()
 {
   if (secondaryDefaultPersistant)
   {
-    localText = String(round(temp.ReadTemp() * 10) / 10) + "C";
+    localText = String(round(temp.ReadTemp() * 10) / 10) + "+";
     localDot = 3;
   }
   else
@@ -48,16 +53,17 @@ void DefaultSecondary()
 #define SECONDS_PIN 5
 Display2 display(true);
 
+void SetText(String text)
+{
+  textTimeout = (millis() / 1000) + 5;
+  localDot = -1;
+  localText = text;
+}
+
 void SetBrightness(bool value)
 {
   display.ChangeBrightness(display.BrightnessLevel + ((value) ? 1 : -1));
-}
-
-void SetText(String text)
-{
-  localText = text;
-  localDot = -1;
-  textTimeout = (millis() / 1000) + 5;
+  SetText(String(display.BrightnessLevel));
 }
 
 void SwitchPersistantSecondary()
@@ -93,6 +99,7 @@ void setup()
   network.SetBrightnessCallback(SetBrightness);
   network.SetTextCallback(SetText);
   network.SwitchPersistantSecondary(SwitchPersistantSecondary);
+  network.RereadRTC(reReadRtc);
 
   Serial.println("Clock");
   // Clock
@@ -105,7 +112,7 @@ void setup()
   //  pin 11 is connected to the CLK
   //  pin 12 (10) is connected to LOAD
   display.Setup(10, 11, 12);
-  display.ChangeBrightness(15);
+  display.ChangeBrightness(2);
 
   Serial.println("Local Display");
 

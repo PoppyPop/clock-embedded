@@ -22,6 +22,12 @@ void Network::SwitchPersistantSecondary(void (*pFunc)())
     pPersisFunc = pFunc;
 }
 
+void (*pRtcFunc)();
+void Network::RereadRTC(void (*pFunc)())
+{
+    pRtcFunc = pFunc;
+}
+
 void handleCommand(char command, String datas)
 {
     Serial.println("Command: " + String(command) + " -> " + datas);
@@ -35,6 +41,8 @@ void handleCommand(char command, String datas)
         pTextFunc(datas);
         break;
     case 'P':
+        pPersisFunc();
+    case 'R':
         pPersisFunc();
     default:
         Serial.println("Command unknown: " + String(command) and +" -> " + datas);
@@ -75,7 +83,7 @@ void receiveData(int byteCount)
 void sendData()
 {
     //int envoi = dataReceived + 1;
-    Wire.write(1);
+    Wire.write(9);
 }
 
 void Network::Setup(void)

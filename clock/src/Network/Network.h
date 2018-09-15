@@ -9,6 +9,7 @@ public:
   void SetBrightnessCallback(void (*pFunc)(bool action));
   void SetTextCallback(void (*pFunc)(String text));
   void SwitchPersistantSecondary(void (*pFunc)());
+  void RereadRTC(void (*pFunc)());
 
 private:
 

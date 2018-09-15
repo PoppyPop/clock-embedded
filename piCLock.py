@@ -26,6 +26,8 @@ DEVICE_REGISTER_TEXT = ord("T")
 
 DEVICE_SECONDARY_MODE = ord("P")
 
+DEVICE_RTC = ord("R")
+
 # get enum
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
@@ -69,22 +71,23 @@ def touchstart(channel):
 		
 		if button == 19:
 			brightValue = DEVICE_BRIGHT_MINUS
-			newVol = newVol - 0.1
+			newVol = newVol - 0.05
 		elif button == 11:
 			brightValue = DEVICE_BRIGHT_PLUS
-			newVol = newVol + 0.1
+			newVol = newVol + 0.05
 		
 		if mode==1:
 			with pulsectl.Pulse('volume-increaser') as pulse:
 				for sink in pulse.sink_list():
 					# Volume is usually in 0-1.0 range, with >1.0 being soft-boosted
 					pulse.volume_change_all_chans(sink, newVol)
+					vol = pulse.volume_get_all_chans(sink)
+					bus.write_i2c_block_data(DEVICE_ADDRESS, DEVICE_REGISTER_TEXT, txtToByte(str(int(round(vol*100)))))
 		elif mode==2:
 			bus.write_byte_data(DEVICE_ADDRESS, DEVICE_REGISTER_BRIGHT, brightValue)
 		
-		
 	if button == 13 and push:
-		bus.write_byte_data(DEVICE_ADDRESS, DEVICE_REGISTER_TEXT, 0x00)
+		bus.write_byte_data(DEVICE_ADDRESS, DEVICE_SECONDARY_MODE, 0x00)
 		
 	return;
     

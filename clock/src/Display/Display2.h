@@ -19,7 +19,7 @@ public:
   void ChangeBrightness(int brightness);
   void Setup(int dataPin, int clkPin, int csPin);
   Display2(bool debug = false);
-  int BrightnessLevel;
+  int BrightnessLevel = 5;
 
 private:
   LedControl *lc;
