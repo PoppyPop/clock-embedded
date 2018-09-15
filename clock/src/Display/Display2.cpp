@@ -3,7 +3,9 @@
 #define MaxBright 15
 
 String primaryValue;
+int primaryDot;
 String secondaryValue;
+int secondaryDot;
 
 static String padLeft(String base, char pad, unsigned int size)
 {
@@ -27,14 +29,19 @@ static String padLeft(unsigned int dec, char pad, unsigned int size)
     return padLeft(base, pad, size);
 }
 
-void Display2::DisplayNumber(unsigned int toDisplay, char padChar, bool primary)
+void Display2::DisplayInt(unsigned int toDisplay, char padChar, bool primary, int dotPos)
 {
-    DisplayInternal(padLeft(toDisplay, padChar, 4), primary);
+    DisplayInternal(padLeft(toDisplay, padChar, 4), primary, dotPos);
 }
 
-void Display2::DisplayText(String toDisplay, bool primary)
+void Display2::DisplayFloat(float toDisplay, char padChar, bool primary, int dotPos)
 {
-    DisplayInternal(padLeft(toDisplay, ' ', 4), primary);
+    DisplayInternal(padLeft(toDisplay, padChar, 4), primary, dotPos);
+}
+
+void Display2::DisplayText(String toDisplay, bool primary, int dotPos)
+{
+    DisplayInternal(padLeft(toDisplay, ' ', 4), primary, dotPos);
 }
 
 void Display2::Setup(int dataPin, int clkPin, int csPin)
@@ -52,8 +59,9 @@ void Display2::Setup(int dataPin, int clkPin, int csPin)
     lc->clearDisplay(0);
 }
 
-Display2::Display2()
+Display2::Display2(bool debug)
 {
+    _debug = debug;
 }
 
 void Display2::ChangeBrightness(int brightness)
@@ -65,21 +73,23 @@ void Display2::ChangeBrightness(int brightness)
     }
 }
 
-void Display2::DisplayInternal(String toDisplay, bool primary)
+void Display2::DisplayInternal(String toDisplay, bool primary, int dotPos)
 {
-
-    if (primary && toDisplay == primaryValue)
+    // TODO handle dot
+    if (primary && toDisplay == primaryValue && dotPos == primaryDot)
         return;
-    if (!primary && toDisplay == secondaryValue)
+    if (!primary && toDisplay == secondaryValue && dotPos == secondaryDot)
         return;
 
     if (primary)
     {
         primaryValue = toDisplay;
+        primaryDot = dotPos;
     }
     else
     {
         secondaryValue = toDisplay;
+        secondaryDot = dotPos;
     }
 
     int startIndex = (primary) ? 0 : 4;
@@ -90,7 +100,7 @@ void Display2::DisplayInternal(String toDisplay, bool primary)
     {
         char value = toDisplay.charAt(charIndex);
 
-        lc->setChar(0, digit, value, false, pgm_read_byte_near(reversed + digit));
+        lc->setChar(0, digit, value, (charIndex == dotPos), pgm_read_byte_near(reversed + digit));
 
         charIndex++;
     }

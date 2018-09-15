@@ -1,5 +1,10 @@
 #include <RTC/RTC.h>
 
+RTC::RTC(bool debug)
+{
+    _debug = debug;
+}
+
 void RTC::UpdateTZ(int timezone)
 {
     TimeZone = timezone;
@@ -14,7 +19,7 @@ void RTC::InitClock(int timezone)
             ;
     }
 
-    if (Clock.lostPower())
+    if (Clock.lostPower() && _debug)
     {
         Serial.println("RTC lost power, lets set the time!");
     }
@@ -59,7 +64,8 @@ time_t RTC::UpdateClock()
     if (dst)
         future = (future + TimeSpan(0, 1, 0, 0));
 
-    Serial.println("Date update !");
+    if (_debug)
+        Serial.println("Date update !");
 
     tmElements_t tmSet;
     tmSet.Day = future.day();

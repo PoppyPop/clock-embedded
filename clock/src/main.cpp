@@ -2,7 +2,6 @@
 #include <Wire.h>
 #include <TimeLib.h>
 #include "RTC/RTC.h"
-#include "Display/display.h"
 #include "Display/Display2.h"
 #include "Network/Network.h"
 #include "Temp/Temp.h"
@@ -10,6 +9,7 @@
 
 int TimeZone = 1;
 String localText;
+int localDot = -1;
 long textTimeout;
 bool secondaryDefaultPersistant = true;
 
@@ -33,18 +33,20 @@ void DefaultSecondary()
 {
   if (secondaryDefaultPersistant)
   {
-    localText = String(round(temp.ReadTemp() * 10) / 10);
+    localText = String(round(temp.ReadTemp() * 10) / 10) + "C";
+    localDot = 3;
   }
   else
   {
-    localText = String(round(temp.readHumidity() * 10) / 10);
+    localText = String(round(temp.readHumidity() * 10) / 10) + "%";
+    localDot = -1;
   }
 }
 // /Temp
 
 // Display
-Display display;
-Display2 display2;
+#define SECONDS_PIN 5
+Display2 display(true);
 
 void SetBrightness(bool value)
 {
@@ -54,6 +56,7 @@ void SetBrightness(bool value)
 void SetText(String text)
 {
   localText = text;
+  localDot = -1;
   textTimeout = (millis() / 1000) + 5;
 }
 
@@ -84,27 +87,30 @@ void setup()
 {
   Serial.begin(9600); // start serial for output
 
+  Serial.println("Network");
   // Network
   network.Setup();
   network.SetBrightnessCallback(SetBrightness);
   network.SetTextCallback(SetText);
   network.SwitchPersistantSecondary(SwitchPersistantSecondary);
 
+  Serial.println("Clock");
   // Clock
   Clock.InitClock(TimeZone);
   setSyncProvider(UpdateClock);
 
+  Serial.println("Display");
   // Display
-  display.Setup();
-  display.ChangeBrightness(6);
-
-  // Display2
-  //  pin 12 is connected to the DataIn
+  //  pin 10 (12) is connected to the DataIn
   //  pin 11 is connected to the CLK
-  //  pin 10 is connected to LOAD
-  display2.Setup(12, 11, 10);
-  display2.ChangeBrightness(6);
+  //  pin 12 (10) is connected to LOAD
+  display.Setup(10, 11, 12);
+  display.ChangeBrightness(15);
 
+  Serial.println("Local Display");
+
+
+  Serial.println("Audio");
   // Audio
   audioamp.begin();
 
@@ -113,16 +119,17 @@ void setup()
   // we also have to turn off the release to really turn off AGC
   audioamp.setReleaseControl(0);
 
+  Serial.println("Temp");
   // Temp
-  // Final : 2
-  // Temp : 12
-  temp.Setup(12);
+  temp.Setup(2, 5U);
 
   Serial.println("Ready!");
+
+  //display.DisplayText("1234", false, 3);
 }
 
 void loop()
 {
-  display.DisplayNumber(hour() * 100 + minute(), '0', true);
-  display.DisplayText(GetDisplayText(), false);
+  display.DisplayInt(hour() * 100 + minute(), '0', true);
+  display.DisplayText(GetDisplayText(), false, localDot);
 }

@@ -1,0 +1,12 @@
+[Unit]
+Description="piClock Service"
+
+[Service]
+TimeoutStartSec=0
+WorkingDirectory=/opt/piClock
+ExecStart=/opt/piClock/piClock.py
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target

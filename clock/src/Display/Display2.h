@@ -13,14 +13,16 @@ const static bool reversed[8] PROGMEM = {
 class Display2
 {
 public:
-  void DisplayNumber(unsigned int toDisplay, char padChar, bool primary);
-  void DisplayText(String toDisplay, bool primary);
+  void DisplayInt(unsigned int toDisplay, char padChar, bool primary, int dotPos = -1);
+  void DisplayFloat(float toDisplay, char padChar, bool primary, int dotPos = -1);
+  void DisplayText(String toDisplay, bool primary, int dotPos = -1);
   void ChangeBrightness(int brightness);
   void Setup(int dataPin, int clkPin, int csPin);
-  Display2();
+  Display2(bool debug = false);
   int BrightnessLevel;
 
 private:
   LedControl *lc;
-  void DisplayInternal(String toDisplay, bool primary);
+  bool _debug;
+  void DisplayInternal(String toDisplay, bool primary, int dotPos);
 };
