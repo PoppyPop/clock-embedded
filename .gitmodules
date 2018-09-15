@@ -1,3 +1,6 @@
 [submodule "clock/lib/LedControl"]
 	path = clock/lib/LedControl
 	url = https://github.com/PoppyPop/LedControl.git
+[submodule "clock/lib/Eeprom24C32_64"]
+	path = clock/lib/Eeprom24C32_64
+	url = https://github.com/jlesech/Eeprom24C32_64.git

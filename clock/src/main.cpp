@@ -6,6 +6,7 @@
 #include "Network/Network.h"
 #include "Temp/Temp.h"
 #include "Adafruit_TPA2016.h"
+#include "Storage/Storage.h"
 
 int TimeZone = 1;
 String localText;
@@ -25,6 +26,15 @@ void reReadRtc()
   UpdateClock();
 }
 // /Clock
+
+// Storage
+Storage storage;
+
+#define BRIGHTNESS_STORAGE 0x00
+
+bool brightChanged = false;
+
+// /Storage
 
 // 1-Wire network
 Network network;
@@ -50,8 +60,7 @@ void DefaultSecondary()
 // /Temp
 
 // Display
-#define SECONDS_PIN 5
-Display2 display(true);
+Display2 display;
 
 void SetText(String text)
 {
@@ -64,6 +73,7 @@ void SetBrightness(bool value)
 {
   display.ChangeBrightness(display.BrightnessLevel + ((value) ? 1 : -1));
   SetText(String(display.BrightnessLevel));
+  brightChanged = true;
 }
 
 void SwitchPersistantSecondary()
@@ -89,6 +99,16 @@ Adafruit_TPA2016 audioamp = Adafruit_TPA2016();
 
 // /Audio
 
+void SaveBrightness()
+{
+  if (brightChanged)
+  {
+    //Serial.println("Save");
+    storage.Write(BRIGHTNESS_STORAGE, display.BrightnessLevel);
+    brightChanged = false;
+  }
+}
+
 void setup()
 {
   Serial.begin(9600); // start serial for output
@@ -96,15 +116,20 @@ void setup()
   Serial.println("Network");
   // Network
   network.Setup();
-  network.SetBrightnessCallback(SetBrightness);
-  network.SetTextCallback(SetText);
-  network.SwitchPersistantSecondary(SwitchPersistantSecondary);
-  network.RereadRTC(reReadRtc);
 
   Serial.println("Clock");
   // Clock
   Clock.InitClock(TimeZone);
   setSyncProvider(UpdateClock);
+
+  Serial.println("Storage");
+  // Storage
+  storage.Setup();
+
+  int readBright = storage.Read(BRIGHTNESS_STORAGE);
+
+  Serial.print("Read brightness = ");
+  Serial.println(readBright);
 
   Serial.println("Display");
   // Display
@@ -112,10 +137,7 @@ void setup()
   //  pin 11 is connected to the CLK
   //  pin 12 (10) is connected to LOAD
   display.Setup(10, 11, 12);
-  display.ChangeBrightness(2);
-
-  Serial.println("Local Display");
-
+  display.ChangeBrightness(readBright);
 
   Serial.println("Audio");
   // Audio
@@ -130,6 +152,13 @@ void setup()
   // Temp
   temp.Setup(2, 5U);
 
+  Serial.println("Network Callback");
+  // Network Callback
+  network.SetBrightnessCallback(SetBrightness);
+  network.SetTextCallback(SetText);
+  network.SwitchPersistantSecondary(SwitchPersistantSecondary);
+  network.RereadRTC(reReadRtc);
+
   Serial.println("Ready!");
 
   //display.DisplayText("1234", false, 3);
@@ -139,4 +168,5 @@ void loop()
 {
   display.DisplayInt(hour() * 100 + minute(), '0', true);
   display.DisplayText(GetDisplayText(), false, localDot);
+  SaveBrightness();
 }

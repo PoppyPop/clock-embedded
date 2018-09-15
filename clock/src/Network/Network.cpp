@@ -30,7 +30,7 @@ void Network::RereadRTC(void (*pFunc)())
 
 void handleCommand(char command, String datas)
 {
-    Serial.println("Command: " + String(command) + " -> " + datas);
+    // Serial.println("Command: " + String(command) + " -> " + datas);
 
     switch (command)
     {
