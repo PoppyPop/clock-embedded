@@ -144,9 +144,11 @@ void setup()
   audioamp.begin();
 
   // Turn off AGC for the gain test
-  audioamp.setAGCCompression(TPA2016_AGC_OFF);
+  //audioamp.setAGCCompression(TPA2016_AGC_OFF);
   // we also have to turn off the release to really turn off AGC
-  audioamp.setReleaseControl(0);
+  //audioamp.setReleaseControl(0);
+
+  //audioamp.setGain(9);
 
   Serial.println("Temp");
   // Temp
